@@ -42,7 +42,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from ..shared.embeddings import RoPE3D
+from ..shared.embeddings import RoPE3D  # kept for backward-compat imports
 from ..shared.normalization import RMSNorm
 
 
@@ -65,7 +65,7 @@ class FullSpaceTimeAttention(nn.Module):
         hidden_dim: int,
         num_heads: int,
         head_dim: int,
-        rope: RoPE3D,
+        rope: nn.Module,
         dropout: float = 0.0,
     ) -> None:
         super().__init__()

@@ -47,7 +47,7 @@ import torch.nn as nn
 
 from ..shared.activations import SwiGLU
 from ..shared.normalization import RMSNorm
-from ..shared.embeddings import SinusoidalPosEmbed, RoPE3D
+from ..shared.embeddings import SinusoidalPosEmbed, build_rope3d
 from .attention import ChunkedSpaceTimeAttention
 from .config import DiTConfig
 
@@ -173,7 +173,7 @@ class Cosmos2DiTBlock(nn.Module):
         head_dim: int,
         cond_dim: int,
         mlp_ratio: float,
-        rope: RoPE3D,
+        rope: nn.Module,
         chunk_size: int = 8,
         apply_cross_attn: bool = True,
         dropout: float = 0.0,
@@ -292,11 +292,14 @@ class Cosmos2DiT(nn.Module):
 
         # ── Positional embedding ──────────────────────────────────────
         # CHANGED: max_frames 57 → 121  (config-driven, class body unchanged)
-        self.rope = RoPE3D(
+        self.rope = build_rope3d(
+            rope_type=cfg.rope_type,
             head_dim=cfg.head_dim,
+            num_heads=cfg.num_heads,
             max_frames=cfg.max_frames,
             max_h=cfg.max_h,
             max_w=cfg.max_w,
+            mrope_section=cfg.mrope_section,
         )
 
         # ── Input projection (UNCHANGED) ──────────────────────────────

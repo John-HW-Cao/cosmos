@@ -11,7 +11,7 @@ Unchanged fields are reproduced verbatim to make the diff self-contained.
 """
 
 from dataclasses import dataclass, field
-from typing import Tuple
+from typing import Optional, Tuple
 
 
 @dataclass
@@ -113,6 +113,14 @@ class DiTConfig:
 
     # Unified head
     unified_conditioning: bool = True         # CHANGED (was False in Cosmos 1)
+
+    # 3-D RoPE variant.  Options: "standard" | "mrope_interleave" | "mhrope"
+    # "mrope_interleave" interleaves T/H/W frequency assignments across channels
+    #   so every axis spans the full frequency spectrum (MRoPE-Interleave,
+    #   Huang et al. ICLR 2026 / arXiv:2510.23095).
+    # "mhrope" assigns whole attention heads to axes (Multi-Head RoPE, ibid.).
+    rope_type: str = "mrope_interleave"                   # ADDED
+    mrope_section: Optional[Tuple[int, int, int]] = None  # ADDED; None = auto-split
 
 
 @dataclass

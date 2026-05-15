@@ -8,7 +8,7 @@ deviates from Cosmos 1, the change is documented in the cosmos2/ override.
 
 from .activations import SwiGLU, GELU
 from .normalization import RMSNorm, AdaLNZero
-from .embeddings import SinusoidalPosEmbed, RoPE2D, RoPE3D
+from .embeddings import SinusoidalPosEmbed, RoPE2D, RoPE3D, MRoPEInterleave3D, MHRoPE3D, build_rope3d
 
 __all__ = [
     "SwiGLU",
@@ -18,4 +18,7 @@ __all__ = [
     "SinusoidalPosEmbed",
     "RoPE2D",
     "RoPE3D",
+    "MRoPEInterleave3D",
+    "MHRoPE3D",
+    "build_rope3d",
 ]
