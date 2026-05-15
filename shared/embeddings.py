@@ -156,6 +156,7 @@ class RoPE3D(nn.Module):
         max_frames: int = 57,
         max_h: int = 40,
         max_w: int = 64,
+        theta: float = 10000.0,
     ) -> None:
         super().__init__()
         # Split head_dim as evenly as possible across T, H, W axes.
@@ -174,17 +175,17 @@ class RoPE3D(nn.Module):
         self._dim_h = dim_h
         self._dim_w = dim_w
 
-        freqs_t = self._build_freqs(dim_t, max_frames)
-        freqs_h = self._build_freqs(dim_h, max_h)
-        freqs_w = self._build_freqs(dim_w, max_w)
+        freqs_t = self._build_freqs(dim_t, max_frames, theta)
+        freqs_h = self._build_freqs(dim_h, max_h, theta)
+        freqs_w = self._build_freqs(dim_w, max_w, theta)
         self.register_buffer("freqs_t", freqs_t)
         self.register_buffer("freqs_h", freqs_h)
         self.register_buffer("freqs_w", freqs_w)
 
     @staticmethod
-    def _build_freqs(dim: int, max_len: int) -> torch.Tensor:
+    def _build_freqs(dim: int, max_len: int, theta: float = 10000.0) -> torch.Tensor:
         half = dim // 2
-        freqs = 1.0 / (10000 ** (torch.arange(0, dim, 2).float() / dim))  # (half,)
+        freqs = 1.0 / (theta ** (torch.arange(0, dim, 2).float() / dim))  # (half,)
         positions = torch.arange(max_len).float()
         angles = torch.outer(positions, freqs)           # (max_len, half)
         return torch.cat([angles, angles], dim=-1)       # (max_len, dim)
@@ -279,11 +280,13 @@ class MRoPEInterleave3D(nn.Module):
         max_w:         Maximum latent width in tokens.
         theta:         RoPE base frequency (default 10 000).
         mrope_section: (n_t, n_h, n_w) — number of frequency pairs assigned
-                       to each axis within ``head_dim // 2``.  Must satisfy
-                       n_t + n_h + n_w == head_dim // 2, n_h * 3 - 2 <
-                       head_dim // 2, and n_w * 3 - 1 < head_dim // 2.
-                       Defaults to an equal split (n_h = n_w = half // 3,
-                       n_t absorbs the remainder).
+                       to each axis within ``head_dim // 2``.  Must sum to
+                       ``head_dim // 2``, with ``n_h`` and ``n_w`` small
+                       enough that H/W channel indices stay within range
+                       (``n_h * 3 - 2 < head_dim // 2`` and
+                       ``n_w * 3 - 1 < head_dim // 2``).  Defaults to an
+                       equal split (``n_h = n_w = (head_dim // 2) // 3``,
+                       ``n_t`` absorbs the remainder).
     """
 
     def __init__(
@@ -547,7 +550,7 @@ def build_rope3d(
         ``forward(q, k, t_idx, h_idx, w_idx) -> (q_rot, k_rot)``.
     """
     if rope_type == "standard":
-        return RoPE3D(head_dim, max_frames, max_h, max_w)
+        return RoPE3D(head_dim, max_frames, max_h, max_w, theta)
     elif rope_type == "mrope_interleave":
         return MRoPEInterleave3D(
             head_dim=head_dim,
