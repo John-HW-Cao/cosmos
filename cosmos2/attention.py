@@ -132,6 +132,10 @@ class ChunkedSpaceTimeAttention(nn.Module):
         num_chunks = (max_t + self.chunk_size - 1) // self.chunk_size
         out = torch.zeros_like(q)  # will be filled chunk-by-chunk
 
+        # tokens_per_frame = total spatial tokens per latent frame.
+        # Computed once from the first frame's mask to avoid passing H/W explicitly.
+        tokens_per_frame = int((t_idx == 0).sum().item())
+
         prev_k: torch.Tensor | None = None
         prev_v: torch.Tensor | None = None
 
@@ -152,9 +156,10 @@ class ChunkedSpaceTimeAttention(nn.Module):
 
             # Optionally prepend previous-chunk KV context.
             if self.prev_kv_frames > 0 and prev_k is not None:
-                # Take the last ``prev_kv_frames`` frames from previous chunk KV.
-                kv_ctx_k = prev_k[:, :, -self.prev_kv_frames * (chunk_idx.shape[0] // self.chunk_size):]
-                kv_ctx_v = prev_v[:, :, -self.prev_kv_frames * (chunk_idx.shape[0] // self.chunk_size):]
+                # Number of tokens to keep = prev_kv_frames × tokens_per_frame.
+                ctx_tokens = self.prev_kv_frames * tokens_per_frame
+                kv_ctx_k = prev_k[:, :, -ctx_tokens:]
+                kv_ctx_v = prev_v[:, :, -ctx_tokens:]
                 k_c = torch.cat([kv_ctx_k, k_c], dim=2)
                 v_c = torch.cat([kv_ctx_v, v_c], dim=2)
 

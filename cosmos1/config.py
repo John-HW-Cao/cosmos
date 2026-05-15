@@ -66,7 +66,7 @@ class DiTConfig:
     hidden_dim: int = 4096
     num_layers: int = 28
     num_heads: int = 16
-    head_dim: int = 256  # must be divisible by 6 for 3-D RoPE (T+H+W each get head_dim/3)
+    head_dim: int = 256  # must be even for 3-D RoPE (each T/H/W sub-dim uses rotate_half)
     mlp_ratio: float = 4.0
     dropout: float = 0.0
 

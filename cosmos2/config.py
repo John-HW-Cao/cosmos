@@ -91,7 +91,7 @@ class DiTConfig:
     hidden_dim: int = 2048                    # CHANGED (was 4096 for 7B/14B)
     num_layers: int = 24                      # CHANGED (was 28)
     num_heads: int = 16                       # UNCHANGED
-    head_dim: int = 128                       # CHANGED (was 256; = hidden_dim/num_heads); must be divisible by 6
+    head_dim: int = 128                       # CHANGED (was 256; = hidden_dim/num_heads); must be even for RoPE3D
     mlp_ratio: float = 4.0                    # UNCHANGED
     dropout: float = 0.0                      # UNCHANGED
 

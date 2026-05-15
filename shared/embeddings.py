@@ -141,21 +141,17 @@ class RoPE3D(nn.Module):
     ) -> None:
         super().__init__()
         # Split head_dim as evenly as possible across T, H, W axes.
-        # We require head_dim to be even so each axis can use the
-        # rotate_half trick (needs even sub-dimensions).
+        # Each sub-dimension must be even for the rotate_half trick.
         assert head_dim % 2 == 0, "head_dim must be even for RoPE3D"
-        dim_t = head_dim // 3
-        dim_h = head_dim // 3
-        # Remainder goes to W so that dim_t + dim_h + dim_w == head_dim
+        # Compute the largest even number ≤ head_dim // 3 for T and H axes.
+        dim_t = (head_dim // 3) & ~1   # floor to even
+        dim_h = (head_dim // 3) & ~1   # floor to even
+        # W absorbs the remainder; head_dim is even and dim_t, dim_h are even,
+        # so dim_w = head_dim - dim_t - dim_h is automatically even.
         dim_w = head_dim - dim_t - dim_h
-        # Ensure each sub-dimension is even for rotate_half
-        dim_t = dim_t - (dim_t % 2)
-        dim_h = dim_h - (dim_h % 2)
-        dim_w = head_dim - dim_t - dim_h  # absorb any remainder into W
-        if dim_w % 2 != 0:
-            # Shift one unit from dim_h to keep dim_w even
-            dim_h -= 1
-            dim_w += 1
+        assert dim_w > 0 and dim_w % 2 == 0, (
+            f"Invalid RoPE3D split: dim_t={dim_t}, dim_h={dim_h}, dim_w={dim_w}"
+        )
         self._dim_t = dim_t
         self._dim_h = dim_h
         self._dim_w = dim_w
