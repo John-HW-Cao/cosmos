@@ -6,7 +6,7 @@ changes made in Cosmos 2.5 are easy to diff in cosmos2/config.py.
 """
 
 from dataclasses import dataclass, field
-from typing import Tuple
+from typing import Optional, Tuple
 
 
 @dataclass
@@ -84,6 +84,14 @@ class DiTConfig:
 
     # Cosmos 1: separate task heads; 2.5 merges into one unified model.
     unified_conditioning: bool = False  # ← Cosmos 2.5 sets this to True
+
+    # 3-D RoPE variant.  Options: "standard" | "mrope_interleave" | "mhrope"
+    # "mrope_interleave" interleaves T/H/W frequency assignments across channels
+    #   so every axis spans the full frequency spectrum (MRoPE-Interleave,
+    #   Huang et al. ICLR 2026 / arXiv:2510.23095).
+    # "mhrope" assigns whole attention heads to axes (Multi-Head RoPE, ibid.).
+    rope_type: str = "mrope_interleave"                   # ADDED
+    mrope_section: Optional[Tuple[int, int, int]] = None  # ADDED; None = auto-split
 
 
 @dataclass

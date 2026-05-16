@@ -29,7 +29,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from ..shared.embeddings import RoPE3D
+from ..shared.embeddings import RoPE3D  # kept for backward-compat imports
 from ..shared.normalization import RMSNorm
 
 
@@ -58,7 +58,7 @@ class ChunkedSpaceTimeAttention(nn.Module):
         hidden_dim: int,
         num_heads: int,
         head_dim: int,
-        rope: RoPE3D,
+        rope: nn.Module,
         chunk_size: int = 8,
         prev_kv_frames: int = 0,
         dropout: float = 0.0,
